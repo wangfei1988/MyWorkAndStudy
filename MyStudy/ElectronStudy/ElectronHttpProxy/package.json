@@ -1,0 +1,9 @@
+{
+  "name": "electron-http-proxy",
+  "version": "0.0.0",
+  "description": "ElectronHttpProxy",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  }
+}

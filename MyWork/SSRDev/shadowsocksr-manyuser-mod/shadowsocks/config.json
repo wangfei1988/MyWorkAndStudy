@@ -1,0 +1,18 @@
+{
+    "remarks" : "中国 香港三网直连",
+    "id" : "663518BA8A83F79240689CD8820152EA",
+    "server" : "47.244.113.218",
+    "server_port" : 80,
+    "server_udp_port" : 0,
+    "local_port":1080,
+    "password" : "XiaoRong123",
+    "method" : "chacha20",
+    "protocol" : "auth_chain_a",
+    "protocolparam" : "210:W996eP",
+    "obfs" : "http_simple",
+    "obfsparam" : "3695e210.",
+    "remarks_base64" : "5Lit5Zu9IOmmmea4r-S4iee9keebtOi_ng",
+    "group" : "R-Cloud",
+    "enable" : true,
+    "udp_over_tcp" : false
+}

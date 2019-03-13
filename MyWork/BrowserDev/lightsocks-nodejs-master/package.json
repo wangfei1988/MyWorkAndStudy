@@ -1,0 +1,41 @@
+{
+  "name": "lightsocks-nodejs",
+  "version": "1.0.3",
+  "description": "It's a simaple socks5 proxy tool which based on lightsocks",
+  "preferGlobal": true,
+  "bin": {
+    "lsserver": "./bin/lsserver.js",
+    "lslocal": "./bin/lslocal.js"
+  },
+  "scripts": {
+    "server:debug": "export NODE_ENV=debug && node ./bin/lsserver.js",
+    "local:debug": "export NODE_ENV=debug && node ./bin/lslocal.js",
+    "server": "node ./bin/lsserver.js",
+    "local": "node ./bin/lslocal.js",
+    "test": "npm run lint && jest",
+    "lint": "./node_modules/.bin/eslint ./lib --fix"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "keywords": [
+    "socks",
+    "socks5",
+    "proxy"
+  ],
+  "repository": "https://github.com/chrisyer/lightsocks-nodejs",
+  "license": "MIT",
+  "dependencies": {
+    "through2": "^2.0.3",
+    "log4js": "^2.5.3",
+    "commander": "^2.15.0",
+    "pkginfo": "^0.4.1",
+    "url-parse-lax": "^3.0.0"
+  },
+  "devDependencies": {
+    "jest": "^22.4.2",
+    "eslint": "^4.19.1",
+    "eslint-config-alloy": "^1.4.1",
+    "babel-eslint": "^8.2.2"
+  }
+}

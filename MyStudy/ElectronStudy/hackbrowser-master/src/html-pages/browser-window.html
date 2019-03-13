@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>HackBrowser</title>
+
+	<link rel="stylesheet" type="text/css" href="css/cssreset-min.css">
+	<link rel="stylesheet" type="text/css" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+	<!-- 这是一个快速设置按钮的css库-->
+	<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+	<script src="css/jquery.min.js"></script>
+	<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+	<!-- 新 Bootstrap 核心 CSS 文件 -->
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+	<script src="css/bootstrap.min.js"></script>
+
+	<link href='https://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="css/hackbrowser.css">
+	<link rel="stylesheet" type="text/css" href="css/dragula.css">
+
+	<script src="../js/browser-window/lib/keymaster.js"></script>
+	<script src="../js/browser-window/utility/Utility.js"></script>
+	<script src="../js/browser-window/utility/KeyCode.js"></script>
+	<script src="../js/browser-window/utility/URIParser.js"></script>
+	<script src="../js/browser-window/view/BrowserTabBar.js"></script>
+	<script src="../js/browser-window/view/BrowserTab.js"></script>
+	<script src="../js/browser-window/view/AddressBar.js"></script>
+	<script src="../js/browser-window/view/AutoCompleteBox.js"></script>
+	<script src="../js/browser-window/view/UserMenu.js"></script>
+	<script src="../js/browser-window/controller/NavigationHistoryHandler.js"></script>
+	<script src="../js/browser-window/view/SearchBox.js"></script>
+	<script src="../js/browser-window/view/NavigationControls.js"></script>
+	<script src="../js/browser-window/view/ContextMenuHandler.js"></script>
+	<script src="../js/browser-window/view/TabView.js"></script>
+	<script src="../js/browser-window/controller/HackBrowserWindow.js"></script>
+	<script src="../js/browser-window/controller/IPCRendererProcessHandler.js"></script>
+
+	<script src="../js/browser-window/init.js"></script>
+</head>
+<body>
+	<div id="browser-window">
+
+		<!-- 这个是最顶部的tab标签 -->
+		<div id="controls-wrapper">
+			<!-- This region is to allow the user to increase/decrease window size from the top
+			border of the browser window -->
+			<div id="no-drag-region"></div>
+
+			<nav id="navtabs" class="unselectable">
+				<div id="add-tab">
+					<div class="icon-wrapper">
+						<i class="icon ion-plus"></i>
+					</div><!-- // .icon-wrapper -->
+				</div><!-- // #add-tab -->
+			</nav><!-- // nav#navbar -->
+
+		</div><!-- // #controls-wrapper -->
+		<!-- 这个是最顶部的浏览器导航栏目  分为menueleft  address bar  mennue right 三个部分-->
+		<div id="menubar" class="unselectable">
+			<div id="menu-left" class="controls left" style="top:32px">
+				<div id="button-back" class="icon-button disabled">
+					<i class="icon ion-ios-arrow-back"></i>
+				</div><!-- // #button-back -->
+
+				<div id="button-forward" class="icon-button disabled">
+					<i class="icon ion-ios-arrow-forward"></i>
+				</div><!-- // #button-forward -->
+
+				<div id="button-reload" class="icon-button">
+					<i class="icon ion-android-refresh"></i>
+				</div><!-- // #button-reload -->
+
+				<div id="button-stop-loading" class="icon-button">
+					<i class="icon ion-android-close"></i>
+				</div><!-- // #button-stop-loading -->
+			</div><!-- // controls.left -->
+
+			<div id="address-bar-wrapper" style="padding-right: 250px">
+				<input type="text" id="address-bar" />
+			</div><!-- // #address-bar-wrapper -->
+
+			<div id="menu-right" class="controls right" style="top:32px">
+				<!--<div id="button-menu" class="icon-button"><i class="icon ion-navicon-round"></i></div>-->
+				<!--<div><a data-toggle="modal" data-target="#register" href=""><span class="glyphicon glyphicon-user"></span> 注册</a></div>-->
+				<!--<div><a data-toggle="modal" data-target="#login" href=""><span class="glyphicon glyphicon-log-in"></span> 登录</a></div>-->
+				<div id="button-login" ><button style="font-size: 18px">登录</button></div>
+				<div id="button-register"><button  style="font-size: 18px">注册</button></div>
+				<div id="button-min" class="icon-button"><i class="icon ion-minus"></i></div>
+				<div id="button-max" class="icon-button"><i class="icon ion-arrow-expand"></i></div>
+				<div id="button-close" class="icon-button"><i class="icon ion-close"></i></div>
+
+				<!--<div id="close-btn" style="float:right" >-->
+				<!--<div class="icon-wrapper">-->
+				<!--<i class="icon ion-close"></i>-->
+				<!--</div>&lt;!&ndash; // .icon-wrapper &ndash;&gt;-->
+				<!--</div>&lt;!&ndash; // #add-tab &ndash;&gt;-->
+
+				<!--<div id="max-btn"  style="float:right" >-->
+				<!--<div class="icon-wrapper">-->
+				<!--<i class="icon ion-arrow-expand"></i>-->
+				<!--</div>&lt;!&ndash; // .icon-wrapper &ndash;&gt;-->
+				<!--</div>&lt;!&ndash; // #add-tab &ndash;&gt;-->
+
+				<!--<div id="min-btn" style="float:right" >-->
+				<!--<div class="icon-wrapper">-->
+				<!--<i class="icon ion-minus"></i>-->
+				<!--</div>&lt;!&ndash; // .icon-wrapper &ndash;&gt;-->
+				<!--</div>&lt;!&ndash; // #add-tab &ndash;&gt;-->
+			</div><!-- // .controls.right -->
+
+			<div class="clear"></div>
+
+			<div id="auto-complete-box">
+			</div><!-- // #auto-complete-box -->
+		</div><!-- // #menubar -->
+
+		<!-- Wrapper for WebView elements   -->
+		<div id="webview-container">
+		</div><!-- // #webview-container -->
+
+		<div id="bottom-bar" style="color: black; background-color: whitesmoke;font-size: medium " >
+			<button id="downloadnewsoft">
+				获取最新版本
+			</button>
+			小鱼浏览器v1.0
+			<span id="susername">游客用户：</span>
+			<span id="usetime">今日使用时长（今日最大使用时长）：</span>
+			<span id="notice"></span>
+		</div><!-- // #bottom-bar -->
+
+		<!-- 注册窗口 -->
+		<div id="register" class="modal fade" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<button class="close" data-dismiss="modal">
+							<span>&times;</span>
+						</button>
+					</div>
+					<div class="modal-title">
+						<h1 class="text-center">注册</h1>
+					</div>
+					<div class="modal-body">
+						<form class="form-group" action="">
+							<div class="form-group">
+								<label for="">邮箱</label>
+								<input id='reginput_email' class="form-control" type="text" placeholder="6-15位字母或数字">
+							</div>
+							<div class="form-group">
+								<label for="">密码</label>
+								<input id='reginput_pwd' class="form-control" type="password" placeholder="至少6位字母或数字">
+							</div>
+							<div class="form-group">
+								<label for="">再次输入密码</label>
+								<input id='reginput_pwd2' class="form-control" type="password" placeholder="至少6位字母或数字">
+							</div>
+							<div class="text-right">
+								<button id="btn-reg-submit" class="btn btn-primary" type="submit">提交</button>
+								<button class="btn btn-danger" data-dismiss="modal">取消</button>
+							</div>
+							<a href="" data-toggle="modal" data-dismiss="modal" data-target="#login">已有账号？点我登录</a>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 登录窗口 -->
+		<div id="login" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<button class="close" data-dismiss="modal">
+							<span>&times;</span>
+						</button>
+					</div>
+					<div class="modal-title">
+						<h1 class="text-center">登录</h1>
+					</div>
+					<div class="modal-body">
+						<form class="form-group" action="">
+							<div class="form-group">
+								<label for="">邮箱</label>
+								<input  id='logininput_email' class="form-control" type="text" placeholder="">
+							</div>
+							<div class="form-group">
+								<label for="">密码</label>
+								<input id='logininput_pwd' class="form-control" type="password" placeholder="">
+							</div>
+							<div class="text-right">
+								<button id="btn-login-submit" class="btn btn-primary" type="submit">登录</button>
+								<button class="btn btn-danger" data-dismiss="modal">取消</button>
+							</div>
+							<a href="" data-toggle="modal" data-dismiss="modal" data-target="#register">还没有账号？点我注册</a>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+	</div><!-- // #browser-window -->
+
+	<!--
+	下面是一个tab标签拖拽的 没有实际意义直接删除
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js'></script>-->
+
+	<!--<script>-->
+		<!--var dragListener = dragula([document.getElementById('navtabs')], {-->
+			<!--direction: 'horizontal'-->
+		<!--}); -->
+
+		<!--dragListener.on('drag', function(el) {-->
+			<!--if (el.classList.contains('nav-tab')) {-->
+				<!--el.click(); -->
+			<!--}-->
+		<!--});-->
+	<!--</script>-->
+</body>
+</html>
