@@ -97,6 +97,7 @@ Key/
 **/packages/
 **/[Rr]elease/
 **/Key/
-
+.vs/
+**/.vs/
 
  
