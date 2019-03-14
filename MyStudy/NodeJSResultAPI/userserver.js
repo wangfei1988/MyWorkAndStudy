@@ -7,21 +7,14 @@ const mysql=require('mysql')
 const url=require('url')
 
 const connection = mysql.createConnection({
-    host     : '127.0.0.1',
+   // host     : '127.0.0.1',
+    host     : '134.175.38.75',
     user     : 'root',
     password : '1988qwerTYUI@',
     port: '3306',
     database: 'xiaoyubrowser',
     multipleStatements: true ,//允许查询多条语句，结果只返回最后一条 。这里简单起见不使用事务
 });
-
-
-function mysqladd(){
-
-}
-
-
-
 
 function ismail(obj){
     if(obj.toString().indexOf("@")>0 && obj.toString().indexOf(".com")>0)
@@ -38,38 +31,45 @@ function ismail(obj){
 
 
 
-const  userloginsql="select * from user_eamil where email=? and pwd=? "
-const  userregsql="INSERT INTO user_eamil(email,pwd) VALUES(?,?) ; select * from user_eamil where email=? "
-const  userupdatesql="UPDATE user_eamil SET usetime =usetime+1 WHERE email =? ; select * from user_eamil where  email =? "
+const  userloginsql="select * from user_email where email=? and pwd=? "
+const  userfindsql="select * from user_email where email=? "
+const  userregsql="INSERT INTO user_email(email,pwd) VALUES(?,?)" 
+const  userupdatesql="UPDATE user_email SET usetime =usetime+1 , lastcontacttime =NOW()   WHERE email =? "
 
-const  nachineloginsql="select * from user_mac where mac=? "
-const  nachineregsql="INSERT INTO user_mac(mac) VALUES(?); select * from user_mac where  mac=?"
-const  nachineupdatetimesql="UPDATE user_mac SET usetime =usetime+1 WHERE mac =? ; select * from user_mac where  mac =? "
+const  macfindsql="select * from user_mac where mac=? "
+const  macregsql="INSERT INTO user_mac(mac) VALUES(?)"
+const  macupdatesql="UPDATE user_mac SET usetime =usetime+1 ,lastcontacttime =NOW() WHERE mac =?"
+const  SQLERROR=201
+const  YICUNZAIYONGHU=202
+const  EMAILERROR=203
+
+
 
 function init(){
     connection.connect();
 
     //用get方便测试，真新破解你也没办法
+    // 不存在的用户 返回也是200 不会报错，只是data是空数组
+    //这些错误是指服务器层面错误
     app.get('/userlogin', function (req, res) {
         //这里不验证邮箱
         let params = url.parse(req.url, true).query;
-        let username=params.username;
+        let username=params.email;
         let pwd=params.pwd;
-        //parse将字符串转成对象,req.url="/?url=123&name=321"，true表示params解析成json对象{url:"123",name:"321"}，false表示params还是字符串url=123&name=321
-        console.log("User name = "+params.username+", password is "+params.pwd);
+        console.log("User login  name = "+username+", password is "+params.pwd);
         if(!ismail(username)){
             var response = {
-                "responsecode":1,
+                "code":EMAILERROR,
                 "msg":"not correct email address"
             };
             res.end(JSON.stringify(response));
             return;
         }
-        let userloginparaas=[username,pwd];
-        connection.query(userloginsql,userloginparaas,function (err, result) {
+        let userloginparams=[username,pwd];
+        connection.query(userloginsql,userloginparams,function (err, result) {
             if(err){
                 var response = {
-                    "responsecode":2,
+                    "code":SQLERROR,
                     "msg":"sqlerror"+err.message
                 };
                 res.end(JSON.stringify(response));
@@ -77,7 +77,7 @@ function init(){
             }
             console.log("user login sql res:"+result);
             var response = {
-                "responsecode":200,
+                "code":200,
                 "msg":"success",
                 data:JSON.stringify(result),// 这个如果没有则result是空字符串
             };
@@ -85,84 +85,126 @@ function init(){
         });
     })
 
+    //这里会出现用户已存在错误
     app.get('/userreg', function (req, res) {
         //这里不验证邮箱
         let params = url.parse(req.url, true).query;
-        let username=params.username;
+        let username=params.email;
         let pwd=params.pwd;         
-        console.log("User name = "+params.username+", password is "+params.pwd);
+        console.log("User name = "+username+", password is "+params.pwd);
         if(!ismail(username)){
             var response = {
-                "responsecode":1,
+                "code":1,
                 "msg":"not correct email address"
             };
             res.end(JSON.stringify(response));
             return;
         }
-        let userregparams=[username,pwd];
-        connection.query(userloginsql,userregparams,function (err, result) {
+        let userfindparams=[username];
+        connection.query(userfindsql,userfindparams,function (err, result) { //1 查询
             if(err){
                 var response = {
-                    "responsecode":2,
-                    "msg":"sqlerror"+err.message
+                    "code":SQLERROR,
+                    "msg":"user reg find sqlerror"+err.message
                 };
                 res.end(JSON.stringify(response));
                 return;
             }
-            console.log("user login sql res:"+result);
+            console.log("user find  sql res:"+result);
             if(result!=null || result.length==0){
-                let userinsertparams=[username,pwd,username];
-                connection.query(userregsql,userinsertparams,function (err, result) {
+                let userinsertparams=[username,pwd];
+                connection.query(userregsql,userinsertparams,function (err, result) { //2查询不到 则创建
                     if(err){
                         var response = {
-                            "responsecode":2,
+                            "code":SQLERROR,
                             "msg":"sqlerror"+err.message
                         };
                         res.end(JSON.stringify(response));
                         return;
                     }
+                    //插入没报错就行，不需要继续查询
+                    var tempuser ={};
+                    tempuser.email=username;
                     var response = {
-                        "responsecode":200,
+                        "code":200,
                         "msg":"success",
-                        data:JSON.stringify(result),//
+                        data:JSON.stringify(tempuser),//
                     };//
                     res.end(JSON.stringify(response));
                 });
             }else{
                 var response = {
-                    "responsecode":433,
-                    "msg":"failed already exist",
+                    "code":YICUNZAIYONGHU,
+                    "msg":"failed already exist user",
                     error:JSON.stringify(result),// 这个如果没有则result
                 };
                 res.end(JSON.stringify(response));
             }
         });
     })
-    
-    app.get('/machinelogin', function (req, res) {
+
+    //不存在的用户也不会update出错，只是后续返回时空数组
+    app.get('/userupdate', function (req, res) {
         //这里不验证邮箱
         let params = url.parse(req.url, true).query;
-        let username=params.username;
-        //let pwd=params.pwd;
-        //parse将字符串转成对象,req.url="/?url=123&name=321"，true表示params解析成json对象{url:"123",name:"321"}，false表示params还是字符串url=123&name=321
-        console.log("User name = "+params.username);
-        let machineloginparams=[username];
-        connection.query(nachineloginsql,machineloginparams,function (err, result) {
+        let username=params.email;
+        console.log("update user  use time  = "+username);
+        let userparams=[username];
+        connection.query(userupdatesql,userparams,function (err, result) {
             if(err){
                 var response = {
-                    "responsecode":2,
+                    "code":SQLERROR,
+                    "msg":"sqlerror"+err.message
+                };
+                res.end(JSON.stringify(response));
+                return;
+            }
+            console.log("user update  sql res:"+result);
+            // 插入返回值是影响行数 所以这里还得查询
+            connection.query(userfindsql,userparams,function (err, result) {
+                if(err){
+                    var response = {
+                        "code":SQLERROR,
+                        "msg":"user find  sqlerror"+err.message
+                    };
+                    res.end(JSON.stringify(response));
+                    return;
+                }
+                console.log("user update then find  sql res:"+result);
+                var response = {
+                        "code":200,
+                        "msg":"success",
+                        data:JSON.stringify(result),// 这个如果没有则result
+                 };
+                res.end(JSON.stringify(response));
+                })
+            });
+        }
+    )
+
+    app.get('/maclogin', function (req, res) {
+        //这里不验证邮箱
+        let params = url.parse(req.url, true).query;
+        let username=params.mac;
+
+        console.log("mac login  name = "+username);
+        let machineloginparams=[username];
+        connection.query(macfindsql,machineloginparams,function (err, result) {
+            if(err){
+                var response = {
+                    "code":SQLERROR,
                     "msg":"sqlerror"+err.message
                 };
                 res.end(JSON.stringify(response));
                 return;
             }
             console.log("machine login sql res:"+ result); //result是数组对象，没有则是空数组 数组每个成员是一个json对象
-            if(result.length==0){//不存在用户
-                let machineregparams=[username,username];
-                connection.query(nachineregsql,machineregparams,function (err, result) {
+            if(result.length==0){//不存在用户 继续插入
+                let machineregparams=[username];
+                connection.query(macregsql,machineregparams,function (err, result) {
                     if(err){
                         var response = {
-                            "responsecode":2,
+                            "code":SQLERROR,
                             "msg":"sqlerror"+err.message
                         };
                         res.end(JSON.stringify(response));
@@ -170,18 +212,18 @@ function init(){
                     }
                     //插入返回值是   影响行数 在这里我们除了mac其他的信息都不重要 手动生成一个对象
                     //只要插入成功就行，不需要返回结果
-                    //var tempuser ={};
-                    //tempuser.mac=username;
+                    var tempuser ={};
+                    tempuser.mac=username;
                     var response = {
-                        "responsecode":200,
+                        "code":200,
                         "msg":"success",
-                        data:JSON.stringify(result),//
+                        data:JSON.stringify(tempuser),//
                     };//
-                    res.end(JSON.stringify(result));
+                    res.end(JSON.stringify(response));
                 });
             }else{//存在直接返回
                 var response = {
-                    "responsecode":200,
+                    "code":200,
                     "msg":"success",
                     data:JSON.stringify(result),
                 };
@@ -191,62 +233,46 @@ function init(){
     })
 
 
-    app.get('/machinetimeupdate', function (req, res) {
-        //这里不验证邮箱
-        let params = url.parse(req.url, true).query;
-        let username=params.username;
-        //let pwd=params.pwd;
-        //parse将字符串转成对象,req.url="/?url=123&name=321"，true表示params解析成json对象{url:"123",name:"321"}，false表示params还是字符串url=123&name=321
-        console.log("update machine use time  = "+params.username);
-        let machineparams=[username,username];
-        connection.query(nachineupdatetimesql,machineparams,function (err, result) {
-            if(err){
-                var response = {
-                    "responsecode":2,
-                    "msg":"sqlerror"+err.message
-                };
-                res.end(JSON.stringify(response));
-                return;
-            }
-            // 插入返回值是影响行数，所以这里执行2条语句 返回的是插入之后的对象
-            console.log("machine update sql res:"+result);
-            var response = {
-                "responsecode":200,
-                "msg":"success",
-                data:JSON.stringify(result),// 这个如果没有则result
-            };
-            res.end(JSON.stringify(response));
-        });
-    })
+    app.get('/macupdate', function (req, res) {
+            //这里不验证邮箱
+            let params = url.parse(req.url, true).query;
+            let username=params.mac;
+            console.log("update user  use time  = "+username);
+            let userparams=[username];
+            connection.query(macupdatesql,userparams,function (err, result) {
+                if(err){
+                    var response = {
+                        "code":SQLERROR,
+                        "msg":"mac update sqlerror"+err.message
+                    };
+                    res.end(JSON.stringify(response));
+                    return;
+                }
+                console.log("mac  update  sql res:"+result);
+                // 插入返回值是影响行数 所以这里还得查询
+                connection.query(macfindsql,userparams,function (err, result) {
+                    if(err){
+                        var response = {
+                            "code":SQLERROR,
+                            "msg":"mac find sqlerror"+err.message
+                        };
+                        res.end(JSON.stringify(response));
+                        return;
+                    }
+                    console.log("mac update then find  sql res:"+result);
+                    var response = {
+                        "code":200,
+                        "msg":"success",
+                        data:JSON.stringify(result),// 这个如果没有这个用户update 不一定会报错，select也不一定会报错，但是select一定会空白
+                    };
+                    res.end(JSON.stringify(response));
+                })
+            });
+        }
+    )
 
-    app.get('/usertimeupdate', function (req, res) {
-        //这里不验证邮箱
-        let params = url.parse(req.url, true).query;
-        let username=params.username;
-        //let pwd=params.pwd;
-        //parse将字符串转成对象,req.url="/?url=123&name=321"，true表示params解析成json对象{url:"123",name:"321"}，false表示params还是字符串url=123&name=321
-        console.log("update user  use time  = "+params.username);
-        let userparams=[username,username];
-        connection.query(userupdatesql,userparams,function (err, result) {
-            if(err){
-                var response = {
-                    "responsecode":2,
-                    "msg":"sqlerror"+err.message
-                };
-                res.end(JSON.stringify(response));
-                return;
-            }
-            // 插入返回值是影响行数，所以这里执行2条语句 返回的是插入之后的对象
-            console.log("user update time  sql res:"+result);
-            var response = {
-                "responsecode":200,
-                "msg":"success",
-                data:JSON.stringify(result),// 这个如果没有则result
-            };
-            res.end(JSON.stringify(response));
-        });
-    })
-    
+    //其实这个登录注册压力很小，访问压力其实和这个无关，和ssr有关
+
 
     var userServer = app.listen(8082,'0.0.0.0', function () {
         console.log("应用实例，访问地址为134.175.38.75:8082")
